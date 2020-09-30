@@ -2,8 +2,8 @@
 <project version="4">
   <component name="WebServers">
     <option name="servers">
-      <webServer id="24c62c47-2a42-4c24-96d4-e347f5eb663a" name="tt" url="http://az1-ts1.a2hosting.com">
-        <fileTransfer host="az1-ts1.a2hosting.com" port="7822" accessType="SFTP">
+      <webServer id="24c62c47-2a42-4c24-96d4-e347f5eb663a" name="tt" url="http://calomnic.wwwaz1-ts1.a2hosted.com">
+        <fileTransfer host="az1-ts1.a2hosting.com" port="7822" rootFolder="/home/calomnic/calomni" accessType="SFTP">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
           </advancedOptions>
