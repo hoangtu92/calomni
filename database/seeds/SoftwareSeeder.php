@@ -24,15 +24,6 @@ class SoftwareSeeder extends Seeder
 
 
         DB::table("software")->insert([
-            'name' => "C",
-            'test_command' => 'c++ --version',
-            'expected_value' => 'c++',
-            'unexpected_value' => 'Error',
-            'run_command' => 'compile',
-            'thumbnail' => '/uploads/programme/cpp.png'
-        ]);
-
-        DB::table("software")->insert([
             'name' => "Java",
             'test_command' => 'java -v',
             'run_command' => 'java',
@@ -41,26 +32,5 @@ class SoftwareSeeder extends Seeder
             'thumbnail' => '/uploads/programme/java.png'
         ]);
 
-        DB::table("host_software")->insert([
-            "software_id" => 1,
-            "host_id" => 2,
-            "price" => 100,
-            "executable" => true
-        ]);
-
-        DB::table("host_software")->insert([
-            "software_id" => 2,
-            "host_id" => 1,
-            "price" => 120,
-            "executable" => true
-        ]);
-
-
-        DB::table("host_software")->insert([
-            "software_id" => 3,
-            "host_id" => 1,
-            "price" => 200,
-            "executable" => true
-        ]);
     }
 }
