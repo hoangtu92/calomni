@@ -1,0 +1,86 @@
+.app-header {
+    background: #fff !important;
+}
+
+.app-body .sidebar {
+    background: #133E9C !important;
+}
+.sidebar-pills li {
+    color: #383635 !important;
+}
+
+.sidebar.sidebar-pills .nav-link.active, .sidebar.sidebar-pills .nav-link:hover {
+    color: #fff!important;
+    background-color: #383635 !important;
+}
+.app-footer {
+    background: #383635;
+}
+.app-header.bg-light .navbar-brand {
+    width: 225px;
+}
+
+.app-body .main {
+    background: #f8f9fc;
+}
+
+
+
+.btn-primary, .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    color: white;
+    background-color: #0055C6;
+    border-color: #383635;
+}
+
+.btn-primary {
+    color: white;
+    background-color: #0055C6;
+    border-color: #383635;
+}
+
+.sidebar .nav-link.active .nav-icon{
+    color: white
+}
+
+.btn-primary:not(:disabled):not(.disabled).active, .btn-primary:not(:disabled):not(.disabled):active, .dataTables_wrapper .dataTables_paginate .paginate_button.current:not(:disabled):not(.disabled).active, .dataTables_wrapper .dataTables_paginate .paginate_button.current:not(:disabled):not(.disabled):active, .dataTables_wrapper .dataTables_paginate .show>.dropdown-toggle.paginate_button.current, .show>.btn-primary.dropdown-toggle,
+.sidebar .nav-link:hover,
+.page-item.active .page-link,
+.btn-primary:hover, .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover{
+    background-color: #133E9C;
+    border-color: #133E9C;
+}
+
+.sidebar .nav-link {
+    color: white;
+}
+.app-footer {
+    background: #383635;
+}
+.bold-labels label > span{
+    color: red;
+}
+
+.sidebar .nav-dropdown-items .nav-item{
+    padding-left: 10px;
+}
+a sup{
+    background: red;
+    display: inline-block;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 16px;
+    font-size: 10px;
+}
+.btn-success {
+    color: #fff;
+    background-color: #2582FF;
+    border-color: #2582FF;
+}
+.btn-success:hover {
+    color: #fff;
+    background-color: #0059D0;
+    border-color: #0059D0;
+}
+

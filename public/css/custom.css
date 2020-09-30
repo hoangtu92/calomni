@@ -1,0 +1,19 @@
+.form-group{
+    width: 100%;
+}
+
+.label-select{margin: 10px 0;}
+
+.label-select input{
+    display: none;
+}
+
+.label-select input + label{padding: 15px 20px;background: transparent;color: black;border: 1px solid #c5cbdb;width: 100%;text-align: center;}
+
+.label-select input:checked + label{background: #0059d0;color: white;}
+.border-left{
+    border-left: 1px solid black;
+}
+.border-right{
+    border-right: 1px solid #c5cbdb;
+}
