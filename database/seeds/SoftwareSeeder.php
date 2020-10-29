@@ -32,5 +32,14 @@ class SoftwareSeeder extends Seeder
             'thumbnail' => '/uploads/programme/java.png'
         ]);
 
+        DB::table("software")->insert([
+            'name' => "Perl",
+            'test_command' => 'which perl',
+            'run_command' => '',
+            'expected_value' => 'perl',
+            'unexpected_value' => 'Error',
+            'thumbnail' => '/uploads/programme/perl_fd.png'
+        ]);
+
     }
 }

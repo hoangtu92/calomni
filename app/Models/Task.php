@@ -9,7 +9,6 @@ class Task extends Model
 {
     use CrudTrait;
 
-    const PENDING = "pending";
     const STOPPED = "stopped";
     const FAILED = "failed";
     const RUNNING = "running";

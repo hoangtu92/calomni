@@ -18,7 +18,7 @@ class CreateSoftwareTable extends Migration
             $table->string("name");
             $table->string("thumbnail")->default("/uploads/programme/python.png");
             $table->string("test_command");
-            $table->string("run_command")->default('');
+            $table->string("run_command")->nullable(true);
             $table->string("expected_value");
             $table->string("unexpected_value")->nullable(true);
             $table->timestamps();

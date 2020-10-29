@@ -21,19 +21,25 @@ class SoftwareController extends Controller
     public function sh_list(Request $request){
 
         $url = asset("/");
+
+        $host = DB::table("host_software")
+            ->join("hosts", "hosts.id", "=", "host_software.host_id")
+            ->addSelect(DB::raw("(SELECT {$request->user()->id}) as user_id"))
+            ->addSelect("host_software.software_id")
+            ->addSelect("host_software.price")
+            ->addSelect("host_software.executable")
+            ->addSelect("host_software.note")
+            ->where("hosts.user_id", "=", $request->user()->id);
+
         $software = DB::table("software")
-            ->leftJoin("host_software", "host_software.software_id", "=", "software.id")
-            ->leftJoin("hosts", "hosts.id", "=", "host_software.host_id")
-            ->leftJoin("users", function($join){
-                $join->on("users.id", "=", "hosts.user_id");
-            })
+            ->leftJoinSub($host, "host", "host.software_id", "=", "software.id")
             ->addSelect("software.id")
             ->addSelect("software.name")
             ->addSelect(DB::raw("CONCAT('{$url}', software.thumbnail) as thumbnail"))
-            ->addSelect("hosts.user_id")
-            ->addSelect("host_software.price")
-            ->addSelect("host_software.executable")
-            ->addSelect("host_software.note");
+            ->addSelect("host.user_id")
+            ->addSelect("host.price")
+            ->addSelect("host.executable")
+            ->addSelect("host.note");
 
             if($request->filled("keyword")){
                 $lowerKeyword = strtolower($request->keyword);
@@ -42,8 +48,6 @@ class SoftwareController extends Controller
             if($request->filled("search")){
                 $software->where("software.name", "=", $request->search);
             }
-
-            $software->whereRaw("hosts.user_id = {$request->user()->id} OR hosts.user_id IS NULL");
 
 
         return $software->get();
@@ -173,9 +177,12 @@ class SoftwareController extends Controller
     public function host_software($id){
         return DB::table("hosts")
             ->join("host_software", "hosts.id", "=", "host_software.host_id")
+            ->select(DB::raw("hosts.*, price"))
+            #->addSelect(DB::raw("DATE_FORMAT(TIMEDIFF(NOW(), last_active), '%H:%i:%s') as inactive_duration"))
+            ->addSelect(DB::raw("IF(hosts.status = 'inactive', 'inactive', IF(DATE_FORMAT(TIMEDIFF(NOW(), last_active), '%H') >= 0 AND DATE_FORMAT(TIMEDIFF(NOW(), last_active), '%i') >= 1, 'inactive', 'active' )) as activity_status"))
+            ->addSelect(DB::raw("CONCAT('[', (SELECT activity_status), '] ', hosts.os, ' | ', hosts.cpu_name, ' | Storage remains: ', ROUND(hosts.storage_free/1024/1024, 2), 'GB | RAM free: ', ROUND(hosts.mem_free/1024/1024, 2), 'GB') as host_info"))
             ->where("software_id", "=", $id)
             ->where("executable", "=", true)
-            ->select(DB::raw("hosts.*, price"))
             ->get()->toArray();
     }
 }

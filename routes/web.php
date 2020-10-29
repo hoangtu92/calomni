@@ -35,3 +35,8 @@ Route::get("/test", function (){
     $zip->close();
 
 });
+
+Route::get("/mailtest", function (){
+    dd(env('MAIL_DRIVER'));
+
+});

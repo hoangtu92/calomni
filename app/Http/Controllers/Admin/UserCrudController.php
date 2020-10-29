@@ -48,7 +48,7 @@ class UserCrudController extends CrudController
         //CRUD::setFromDb(); // columns
 
         $this->crud->addClause("where", "role", "!=", User::ADMIN);
-        $this->crud->removeButtons(["create", "show", "delete"]);
+        $this->crud->removeButtons(["create", "show"]);
 
         if(!backpack_user()->canAdministrate()){
             $this->crud->addClause("where", "id", "=", backpack_user()->id);

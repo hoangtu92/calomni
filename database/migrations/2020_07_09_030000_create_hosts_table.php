@@ -31,6 +31,7 @@ class CreateHostsTable extends Migration
             $table->bigInteger("mem_total");
             $table->bigInteger("mem_free");
             $table->text("info");
+            $table->timestamp("last_active");
             $table->enum("status", [Host::INACTIVE, Host::ACTIVE])->default(Host::ACTIVE);
             $table->string("mac")->unique();
 

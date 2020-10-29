@@ -50,6 +50,8 @@ Route::middleware(["verified", "auth:sanctum"])->group(function () {
 
         Route::get("/tasks", "Api\HostController@tasks");
 
+        Route::get("/logs", "Api\HostController@logs");
+
         //Get host info
         Route::get("/item/{token}", "Api\HostController@detail");
 
@@ -107,9 +109,6 @@ Route::middleware(["verified", "auth:sanctum"])->group(function () {
         //Assign another host to job
         Route::put("/{id}/item", "Api\JobController@assign_host");
 
-        //upload additional files to the job
-        Route::post("/{id}/item", "Api\JobController@upload_file");
-
         Route::delete("/{id}/item", "Api\JobController@delete");
 
 
@@ -118,7 +117,8 @@ Route::middleware(["verified", "auth:sanctum"])->group(function () {
         Route::post("/{id}/start", "Api\JobController@startJob");
         Route::post("/{id}/stop", "Api\JobController@stopJob");
 
-        Route::post("/{id}/report", "Api\JobController@report");
+        //SH run task
+        Route::post("/{id}/update_task", "Api\JobController@update_task");
         Route::get("/{id}/download_report", "Api\JobController@download_report");
     });
 

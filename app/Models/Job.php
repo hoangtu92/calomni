@@ -13,6 +13,7 @@ class Job extends Model
     const RUNNING = "running";
     const COMPLETED = "completed";
     const FAILED = "failed";
+    const STOPPPED = "stopped";
 
     /*
     |--------------------------------------------------------------------------

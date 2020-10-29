@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Host;
+use App\Models\Job;
 use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -105,5 +106,26 @@ class HostController extends Controller
             ->where("tasks.status", "=", Task::RUNNING)
             ->select(DB::raw("tasks.*, jobs.run_file"))
             ->get()->toArray();
+    }
+
+    public function logs(Request $request){
+        $tasks = DB::table("tasks")
+            ->join("jobs", "jobs.id", "=", "tasks.job_id")
+            ->join("hosts", "hosts.id", "=", "jobs.host_id")
+            ->join("software", "software.id", "=", "jobs.software_id")
+            ->addSelect("software.name as software_name")
+            ->addSelect("jobs.status as status")
+            ->addSelect(DB::raw("CONCAT(hosts.os, ' | ', hosts.cpu_name) as host_info"))
+            ->addSelect(DB::raw("DATE_FORMAT(tasks.start, '%Y-%m-%d %H:%i:%s') as start"))
+            ->addSelect(DB::raw("DATE_FORMAT(tasks.finish, '%Y-%m-%d %H:%i:%s') as finish"))
+            ->addSelect(DB::raw("TIMEDIFF(tasks.finish, tasks.start) as duration"))
+            ->addSelect(DB::raw("ROUND(tasks.cost, 0) as cost"))
+            ->where("jobs.user_id", "=", $request->user()->id)
+            ->whereNotIn("jobs.status", [Job::PENDING, Job::STOPPPED])
+            ->orderBy("jobs.created_at")
+            ->take(20)
+            ->get()->toArray();
+
+        return $tasks;
     }
 }

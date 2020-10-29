@@ -36,7 +36,7 @@ class CreateJobsTable extends Migration
 
             $table->longText("log")->nullable(true)->comment("job log");
 
-            $table->enum("status", [Job::FAILED, Job::RUNNING, Job::COMPLETED])->default(Job::RUNNING);
+            $table->enum("status", [Job::PENDING, Job::FAILED, Job::RUNNING, Job::COMPLETED, Job::STOPPPED])->default(Job::PENDING);
 
             $table->timestamps();
         });
