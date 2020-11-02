@@ -16,10 +16,10 @@ class CreateBillingsTable extends Migration
         Schema::create('billings', function (Blueprint $table) {
             $table->id();
             $table->foreignId("user_id");
-            $table->foreign("user_id")->references("id")->on("users");
+            $table->foreign("user_id")->references("id")->on("users")->onDelete('cascade');
 
             $table->foreignId("job_id");
-            $table->foreign("job_id")->references("id")->on("jobs");
+            $table->foreign("job_id")->references("id")->on("jobs")->onDelete('cascade');
 
             $table->decimal("amount")->default(0);
             $table->text("notes")->nullable(true);

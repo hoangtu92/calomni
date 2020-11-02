@@ -15,8 +15,8 @@ class SoftwareSeeder extends Seeder
         //
         DB::table("software")->insert([
             'name' => "Python",
-            'test_command' => 'python -V',
-            'run_command' => 'python',
+            'test_command' => 'python3 -V',
+            'run_command' => '',
             'expected_value' => 'Python',
             'unexpected_value' => 'Error',
             'thumbnail' => '/uploads/programme/python.png'
@@ -26,7 +26,7 @@ class SoftwareSeeder extends Seeder
         DB::table("software")->insert([
             'name' => "Java",
             'test_command' => 'java -v',
-            'run_command' => 'java',
+            'run_command' => '',
             'expected_value' => 'java',
             'unexpected_value' => 'Error',
             'thumbnail' => '/uploads/programme/java.png'

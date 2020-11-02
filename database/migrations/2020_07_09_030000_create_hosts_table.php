@@ -18,7 +18,7 @@ class CreateHostsTable extends Migration
         Schema::create('hosts', function (Blueprint $table) {
             $table->id();
             $table->foreignId("user_id");
-            $table->foreign("user_id")->references("id")->on("users");
+            $table->foreign("user_id")->references("id")->on("users")->onDelete('cascade');
             $table->string("token")->unique()->comment("MD5 encrypted token is a result of combination of CPU ID, MAC address, HDD Serial ID");
             $table->string("name", 45);
             $table->string("os", 45);

@@ -16,10 +16,10 @@ class CreateHostSoftwareTable extends Migration
         Schema::create('host_software', function (Blueprint $table) {
             $table->id();
             $table->foreignId("software_id");
-            $table->foreign("software_id")->references("id")->on("software");
+            $table->foreign("software_id")->references("id")->on("software")->onDelete('cascade');
 
             $table->foreignId("host_id");
-            $table->foreign("host_id")->references("id")->on("hosts");
+            $table->foreign("host_id")->references("id")->on("hosts")->onDelete('cascade');;
 
             $table->bigInteger("price")->default(0);
             $table->string("note")->nullable(true);

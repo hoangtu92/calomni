@@ -17,7 +17,7 @@ class CreateTicketsTable extends Migration
         Schema::create('tickets', function (Blueprint $table) {
             $table->id();
             $table->foreignId("user_id");
-            $table->foreign("user_id")->references("id")->on("users");
+            $table->foreign("user_id")->references("id")->on("users")->onDelete('cascade');;
             $table->string("issue");
             $table->text("content");
             $table->enum("status", [Ticket::PENDING, Ticket::RESOLVED])->default(Ticket::PENDING);

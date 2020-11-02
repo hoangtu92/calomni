@@ -17,7 +17,7 @@ class CreateTasksTable extends Migration
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
             $table->foreignId("job_id");
-            $table->foreign('job_id')->references("id")->on("jobs");
+            $table->foreign('job_id')->references("id")->on("jobs")->onDelete('cascade');
 
             $table->decimal("cost")->default(0);
 

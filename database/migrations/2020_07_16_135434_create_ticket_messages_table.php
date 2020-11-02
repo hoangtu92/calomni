@@ -16,7 +16,7 @@ class CreateTicketMessagesTable extends Migration
         Schema::create('ticket_messages', function (Blueprint $table) {
             $table->id();
             $table->foreignId("ticket_id");
-            $table->foreign("ticket_id")->references("id")->on("tickets");
+            $table->foreign("ticket_id")->references("id")->on("tickets")->onDelete('cascade');;
             $table->foreignId("user_id");
             $table->foreign("user_id")->references("id")->on("users");
             $table->text("content");

@@ -21,16 +21,16 @@ class CreateJobsTable extends Migration
             $table->uuid("uid")->unique();
 
             $table->foreignId("user_id");
-            $table->foreign("user_id")->references("id")->on("users");
+            $table->foreign("user_id")->references("id")->on("users")->onDelete('cascade');
 
             $table->foreignId("host_id");
-            $table->foreign("host_id")->references("id")->on("hosts");
+            $table->foreign("host_id")->references("id")->on("hosts")->onDelete('cascade');;
 
             $table->foreignId("software_id");
-            $table->foreign("software_id")->references("id")->on("software");
+            $table->foreign("software_id")->references("id")->on("software")->onDelete('cascade');
 
             $table->foreignId("host_software_id");
-            $table->foreign("host_software_id")->references("id")->on("host_software");
+            $table->foreign("host_software_id")->references("id")->on("host_software")->onDelete('cascade');
 
             $table->string("run_file")->nullable(false)->comment("runs file");
 
