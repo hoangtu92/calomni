@@ -60,7 +60,7 @@ class AnnouncementCrudController extends CrudController
             "label" => __("Announcement Content")
         ]);
 
-        $this->crud->addColumn([
+        /*$this->crud->addColumn([
             "name" => "receiver",
             "type" => "select2_from_array",
             "options" => [
@@ -69,7 +69,7 @@ class AnnouncementCrudController extends CrudController
                 Announcement::SH => "SH"
             ],
             "label" => __("Announcement Receiver")
-        ]);
+        ]);*/
     }
 
     /**

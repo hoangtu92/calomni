@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', "FrontendController@home")->name("home");
+Route::middleware("announcement")->get('/', "FrontendController@home")->name("home");
 Route::get('/sign-up-host', "FrontendController@signUpHost")->name("sign_up_host");
 Route::any('/sign-up-host-verification', "FrontendController@signUpHostVerification")->name("sign_up_host_verification");
 

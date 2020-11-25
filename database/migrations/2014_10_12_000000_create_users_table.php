@@ -23,12 +23,11 @@ class CreateUsersTable extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable(true);
 
-            $table->enum("login_status", [User::INACTIVE, User::ACTIVE])->default(User::INACTIVE);
             $table->enum("activation_status", [User::ACTIVATED, User::PENDING])->default(User::PENDING);
 
             $table->enum("role", [User::SH, User::RH, User::ADMIN])->default(User::RH);
 
-            $table->dateTime("last_login")->nullable(true);
+            $table->dateTime("last_active")->nullable(true);
             $table->rememberToken();
             $table->timestamps();
         });

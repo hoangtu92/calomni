@@ -17,3 +17,14 @@
 .border-right{
     border-right: 1px solid #c5cbdb;
 }
+
+.announcements{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-top: 5px;
+}
+
+.announcements > div{
+}

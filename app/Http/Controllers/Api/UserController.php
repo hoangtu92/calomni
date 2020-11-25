@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\SuccessResponse;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,7 +28,10 @@ class UserController extends Controller
             ]);
         }
 
-        return $user->createToken($request->email)->plainTextToken;
+        //return new Response($user->createToken($request->email)->plainTextToken, "Login Successfully");
+
+        return new SuccessResponse($user->createToken($request->email));
+
     }
 
     public function logout () {
@@ -42,11 +46,26 @@ class UserController extends Controller
     //Get all tasks of current user
     public function tasks(Request $request)
     {
-        return DB::table("tasks")
+        $resource = DB::table("tasks")
             ->join("jobs", "jobs.id", "=", "tasks.job_id")
             ->join("users", "jobs.user_id", "=", "users.id")
             ->where("users.id", "=", $request->user()->id)
             ->select(DB::raw("tasks.*"))
-            ->get()->toArray();
+            ->get();
+
+        return new SuccessResponse($resource);
+    }
+
+    public function announcements(){
+
+    }
+    public function affiliates(){
+        $url = url("/");
+        $affiliates = DB::table("affiliates")
+            ->addSelect("title")
+            ->addSelect("url")
+            ->addSelect(DB::raw("CONCAT('{$url}', '/', image) as image"))
+            ->whereRaw("NOW() BETWEEN `from` AND `to`")->get();
+        return new SuccessResponse($affiliates);
     }
 }

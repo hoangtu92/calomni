@@ -37,6 +37,9 @@ Route::middleware(["verified", "auth:sanctum"])->group(function () {
         Route::get("/tasks", "Api\UserController@tasks");
     });
 
+    Route::get("announcements", "Api\UserController@announcements");
+    Route::get("affiliates", "Api\UserController@affiliates");
+
     /**
      * Host API
      */

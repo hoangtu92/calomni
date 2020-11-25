@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\FailedResponse;
+use App\Http\Resources\SuccessResponse;
 use App\Models\Host;
 use App\Models\HostSoftware;
 use App\Models\Job;
@@ -22,6 +24,9 @@ class JobController extends Controller
     public function list(Request $request)
     {
 
+        #$request->user()->last_active = now();
+        #$request->user()->save();
+
         $url = url("jobs");
 
         $jobs = DB::table("jobs")
@@ -30,11 +35,15 @@ class JobController extends Controller
             ->join("hosts", "hosts.id", "=", "jobs.host_id")
             ->join("users", "users.id", "=", "jobs.user_id")
             ->join("host_software", "host_software.id", "=", "jobs.host_software_id")
-            ->addSelect("jobs.created_at")
             ->addSelect("jobs.id")
+            ->addSelect("software.id as software_id")
+            ->addSelect("hosts.id as host_id")
+            ->addSelect(DB::raw("IF(hosts.status = 'inactive', 'inactive', IF(DATE_FORMAT(TIMEDIFF(NOW(), hosts.last_active), '%H') >= 0 AND DATE_FORMAT(TIMEDIFF(NOW(), hosts.last_active), '%i') >= 1, 'inactive', 'active' )) as host_activity_status"))
+            ->addSelect("jobs.created_at")
             ->addSelect("jobs.status")
             ->addSelect("software.name as software_name")
-            ->addSelect(DB::raw("CONCAT(hosts.os, ' | ', hosts.cpu_name, ' | Storage remains: ', ROUND(hosts.storage_free/1024/1024, 2), 'GB | RAM free: ', ROUND(hosts.mem_free/1024/1024, 2), 'GB') as host_info"))
+            ->addSelect(DB::raw("CONCAT('Kernel: ', hosts.info, ' \nOS: ', hosts.os, ' \nCPU: ', hosts.cpu_name, ' \nStorage remains: ', ROUND(hosts.storage_free/1024/1024, 2), 'GB \nRAM available: ', ROUND(hosts.mem_free/1024/1024, 2), 'GB') as host_info"))
+            ->addSelect(DB::raw("hosts.os as host_name"))
             ->addSelect("host_software.price as price")
             ->addSelect(DB::raw("CONCAT('{$url}/', MD5(users.uid), '/', MD5(jobs.uid), '.zip') as file_url"))
             ->where("jobs.user_id", "=", $request->user()->id)
@@ -43,7 +52,7 @@ class JobController extends Controller
             ->take(20)
             ->get();
 
-        return $jobs;
+        return new SuccessResponse($jobs);
 
         //return Job::where("user_id", $request->user()->id)->get();
     }
@@ -69,7 +78,7 @@ class JobController extends Controller
             ->addSelect(DB::raw("TIMEDIFF(tasks.finish, tasks.start) as duration"))
             ->where("jobs.id", "=", $id)->first();
 
-        return $job;
+        return new SuccessResponse($job);
     }
 
     public function create(Request $request)
@@ -83,12 +92,10 @@ class JobController extends Controller
 
         $hostSoftware = HostSoftware::where("host_id", $request->host_id)->where("software_id", $request->software_id)->first();
 
-        if (!$hostSoftware || !$hostSoftware->executable) return [
-            "status" => false,
-            "message" => "Host cannot run this software",
-            "data" => $request->host_id,
-            "data2" => $request->software_id,
-        ];
+        if (!$hostSoftware || !$hostSoftware->executable) {
+            $response = new FailedResponse($request);
+            return $response->additional(["message" => "Host cannot run this software"])->response()->setStatusCode(400);
+        }
 
         $user_dir = "/" . md5($request->user()->uid);
 
@@ -100,7 +107,8 @@ class JobController extends Controller
 
 
         if (!$request->file('run_file')->isValid()) {
-            return response()->json(['invalid_file_upload'], 400);
+            $response = new FailedResponse($request);
+            return $response->additional(["message" => "Invalid File upload"])->response()->setStatusCode(400);
         }
 
         $zipFileName = md5($uid).'.zip';
@@ -130,7 +138,7 @@ class JobController extends Controller
 
         $job->save();
 
-        return $job;
+        return new SuccessResponse($job);
 
     }
 
@@ -148,17 +156,18 @@ class JobController extends Controller
 
             $hostSoftware = HostSoftware::where("host_id", $request->host_id)->where("software_id", $job->software_id)->first();
 
-            if (!$hostSoftware) return [
-                "status" => false,
-                "message" => "Host cannot run this software"
-            ];
+            if (!$hostSoftware){
+                $response = new FailedResponse([]);
+                return $response->additional(["message" => "Host cannot run this software\""]);
+            }
 
 
             $job->host_id = $request->host_id;
+            $job->host_software_id = $hostSoftware->id;
             $job->save();
         }
 
-        return $job;
+        return new SuccessResponse($job);
     }
 
 
@@ -172,9 +181,12 @@ class JobController extends Controller
         $host->last_active = now();
         $host->save();
 
+        $request->user()->last_active = now();
+        $request->user()->save();
+
         if ($host) {
             $url = url("jobs");
-            return DB::table("jobs")
+            $resource = DB::table("jobs")
                 ->join("software", "software.id", "=", "jobs.software_id")
                 ->join("users", "users.id", "=", "jobs.user_id")
                 ->addSelect("jobs.id as job_id")
@@ -189,8 +201,10 @@ class JobController extends Controller
                 ->where("host_id", "=", $host->id)
                 ->where("status", "=", Job::PENDING)
                 ->get();
+
+            return new SuccessResponse($resource);
         }
-        return [];
+        return new FailedResponse([]);
     }
 
     public function download_report($id){
@@ -199,7 +213,7 @@ class JobController extends Controller
             ->addSelect(DB::raw("CONCAT('{$url}/', MD5(users.uid), '/', MD5(jobs.uid), '.zip') as file_url"))
             ->where("jobs.id", "=", $id)->first();
 
-        return $job->toArray();
+        return new SuccessResponse($job);
     }
 
     public function delete($id)
@@ -209,7 +223,7 @@ class JobController extends Controller
         if ($job)
             $job->delete();
 
-        return $job;
+        return new SuccessResponse($job);
     }
 
     //Get all tasks of a job
@@ -218,8 +232,8 @@ class JobController extends Controller
         $job = Job::find($id);
 
         if ($job) {
-            return $job->tasks;
-        } else return [];
+            return new SuccessResponse($job->tasks);
+        } else return new FailedResponse([]);
     }
 
 
@@ -229,10 +243,8 @@ class JobController extends Controller
 
         if($job){
             if ($job->status == Job::RUNNING) {
-                return [
-                    "status" => false,
-                    "message" => "Job is already running"
-                ];
+                $response =  new FailedResponse([]);
+                return $response->additional(["message" => "Job is already running" ]);
             }
 
             $job->status = Job::PENDING;
@@ -240,7 +252,7 @@ class JobController extends Controller
             $job->save();
         }
 
-        return $job;
+        return new SuccessResponse($job);
     }
 
     public function stopJob($id)
@@ -259,14 +271,14 @@ class JobController extends Controller
             $job->log .= "RH stopped job at: " . now() . PHP_EOL;
             $job->save();
         }
-        return $job;
+        return new SuccessResponse($job);
     }
 
 
     /**
      * @param $id
      * @param Request $request
-     * @return Task|array
+     * @return FailedResponse|SuccessResponse
      */
     public function update_task($id, Request $request){
 
@@ -277,10 +289,8 @@ class JobController extends Controller
         $job = Job::find($id);
 
         if(!$job){
-            return [
-                "status" => false,
-                "message" => "Job is removed or not exists"
-            ];
+            $response = new FailedResponse([]);
+            return $response->additional(["message" => "Job is removed or not exists"]);
         }
 
         $job->status = $request->status;
@@ -313,7 +323,7 @@ class JobController extends Controller
         $task->save();
 
 
-        return $task;
+        return new SuccessResponse($task);
 
 
     }

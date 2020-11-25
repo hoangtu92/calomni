@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\FailedResponse;
+use App\Http\Resources\SuccessResponse;
 use App\Models\Host;
 use App\Models\HostSoftware;
 use App\Models\Software;
@@ -15,7 +17,7 @@ class SoftwareController extends Controller
 {
     //
     public function list() {
-        return Software::all();
+        return new SuccessResponse(Software::all());
     }
 
     public function sh_list(Request $request){
@@ -50,11 +52,11 @@ class SoftwareController extends Controller
             }
 
 
-        return $software->get();
+        return new SuccessResponse($software->get());
     }
 
     public function detail ($id, Request $request) {
-        return Software::find($id);
+        return new SuccessResponse(Software::find($id));
     }
 
 
@@ -83,7 +85,7 @@ class SoftwareController extends Controller
         }
 
         //Send software command info to instruct host to test the software
-        return $software;
+        return new SuccessResponse($software);
     }
 
     public function submit_test_result ($id, Request $request){
@@ -132,15 +134,20 @@ class SoftwareController extends Controller
         $hostSoftware->save();
         $softwareTest->save();
 
-        return [
+        return new SuccessResponse([
             "status" => $check,
             "result" => $request->result,
             "expected" => $software->expected,
             "not_expected" => $software->not_expected
-        ];
+        ]);
 
     }
 
+    /**
+     * @param $id
+     * @param Request $request
+     * @return FailedResponse|SuccessResponse
+     */
     public function update_price ($id, Request $request) {
 
         $request->validate([
@@ -152,7 +159,7 @@ class SoftwareController extends Controller
         $host = Host::where("token", "=", $request->token)->first();
 
         if (!$host || !$software) {
-            return false;
+            return new FailedResponse($request);
         }
 
         $hostSoftware = HostSoftware::where("software_id", $software->id)->where("host_id", $host->id)->first();
@@ -166,23 +173,25 @@ class SoftwareController extends Controller
 
             $hostSoftware->save();
 
-            return $hostSoftware;
+            return new SuccessResponse($hostSoftware);
         }
 
-        return false;
+        return new FailedResponse($request);
 
         //Return result
     }
 
     public function host_software($id){
-        return DB::table("hosts")
+        $resource =  DB::table("hosts")
             ->join("host_software", "hosts.id", "=", "host_software.host_id")
             ->select(DB::raw("hosts.*, price"))
             #->addSelect(DB::raw("DATE_FORMAT(TIMEDIFF(NOW(), last_active), '%H:%i:%s') as inactive_duration"))
             ->addSelect(DB::raw("IF(hosts.status = 'inactive', 'inactive', IF(DATE_FORMAT(TIMEDIFF(NOW(), last_active), '%H') >= 0 AND DATE_FORMAT(TIMEDIFF(NOW(), last_active), '%i') >= 1, 'inactive', 'active' )) as activity_status"))
-            ->addSelect(DB::raw("CONCAT('[', (SELECT activity_status), '] ', hosts.os, ' | ', hosts.cpu_name, ' | Storage remains: ', ROUND(hosts.storage_free/1024/1024, 2), 'GB | RAM free: ', ROUND(hosts.mem_free/1024/1024, 2), 'GB') as host_info"))
+            ->addSelect(DB::raw("CONCAT('[', (SELECT activity_status), '] ', hosts.os, ' | ', hosts.cpu_name, ' | Storage remains: ', ROUND(hosts.storage_free/1024/1024, 2), 'GB | RAM available: ', ROUND(hosts.mem_free/1024/1024, 2), 'GB') as host_info"))
             ->where("software_id", "=", $id)
             ->where("executable", "=", true)
-            ->get()->toArray();
+            ->get();
+
+        return new SuccessResponse($resource);
     }
 }

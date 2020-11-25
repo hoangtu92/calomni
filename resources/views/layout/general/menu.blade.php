@@ -1,3 +1,12 @@
+@if(isset($announcements))
+    <div id="top">
+        <div class="announcements">
+            @foreach($announcements as $announcement)
+                <div>{!! $announcement->content !!}</div>
+            @endforeach
+        </div>
+    </div>
+@endif
 <nav class="navbar navbar-default menu">
     <div class="container">
         <div class="navbar-header">

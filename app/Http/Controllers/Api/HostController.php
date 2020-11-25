@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\SuccessResponse;
 use App\Models\Host;
 use App\Models\Job;
 use App\Models\Task;
@@ -29,7 +30,7 @@ class HostController extends Controller
 
         $exists = Host::where("token", $request->token)->first();
 
-        if($exists) return $exists;
+        if($exists) return new SuccessResponse($exists);
 
         $host = new Host([
             'user_id' => $request->user()->id,
@@ -50,16 +51,16 @@ class HostController extends Controller
 
         $host->save();
 
-        return $host;
+        return new SuccessResponse($host);
 
     }
 
     public function list (Request $request) {
-        return Host::where("user_id", $request->user()->id)->get();
+        return new SuccessResponse(Host::where("user_id", $request->user()->id)->get());
     }
 
     public function detail($token) {
-        return Host::where("token", $token)->first();
+        return new SuccessResponse(Host::where("token", $token)->first());
     }
     public function update($token, Request $request) {
 
@@ -79,7 +80,7 @@ class HostController extends Controller
         }
 
 
-        return $host;
+        return new SuccessResponse($host);
     }
 
     public function delete($token) {
@@ -88,7 +89,7 @@ class HostController extends Controller
         if ($host)
             $host->delete();
 
-        return $host;
+        return new SuccessResponse($host);
     }
 
     //Get all tasks assigned to current machine
@@ -99,13 +100,15 @@ class HostController extends Controller
             "token" => "required"
         ]);
 
-        return DB::table("tasks")
+        $resource = DB::table("tasks")
             ->join("jobs", "jobs.id", "=", "tasks.job_id")
             ->join("hosts", "jobs.host_id", "=", "hosts.id")
             ->where("hosts.token", "=", $request->token)
             ->where("tasks.status", "=", Task::RUNNING)
             ->select(DB::raw("tasks.*, jobs.run_file"))
-            ->get()->toArray();
+            ->get();
+
+        return new SuccessResponse($resource);
     }
 
     public function logs(Request $request){
@@ -126,6 +129,6 @@ class HostController extends Controller
             ->take(20)
             ->get()->toArray();
 
-        return $tasks;
+        return new SuccessResponse($tasks);
     }
 }
