@@ -32,11 +32,11 @@ class CreateJobsTable extends Migration
             $table->foreignId("host_software_id");
             $table->foreign("host_software_id")->references("id")->on("host_software")->onDelete('cascade');
 
-            $table->string("run_file")->nullable(false)->comment("runs file");
+            $table->string("run_file")->nullable(true)->comment("runs file");
 
             $table->longText("log")->nullable(true)->comment("job log");
 
-            $table->enum("status", [Job::PENDING, Job::FAILED, Job::RUNNING, Job::COMPLETED, Job::STOPPPED])->default(Job::PENDING);
+            $table->enum("status", [Job::WAITING, Job::PENDING, Job::FAILED, Job::RUNNING, Job::COMPLETED, Job::STOPPPED])->default(Job::WAITING);
 
             $table->timestamps();
         });

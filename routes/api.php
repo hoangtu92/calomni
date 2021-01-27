@@ -100,6 +100,7 @@ Route::middleware(["verified", "auth:sanctum"])->group(function () {
     Route::prefix("job")->group(function (){
 
         Route::post("/create", "Api\JobController@create");
+        Route::put("/{id}/upload_file", "Api\JobController@upload_file");
 
         //RH get all jobs of himself
         Route::get("/list", "Api\JobController@list");
@@ -133,6 +134,11 @@ Route::middleware(["verified", "auth:sanctum"])->group(function () {
 
         //List income of host user
         #Route::get("/income", "Api\BillingController@list");
+    });
+
+    Route::prefix("notification")->group(function (){
+        Route::get("/list/{token}", "Api\NotificationController@list");
+        Route::post("/read/{id}", "Api\NotificationController@read");
     });
 
 

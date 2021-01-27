@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig authType="PASSWORD" host="az1-ts1.a2hosting.com" id="6971678a-9dcf-43a9-846e-a173ac4cd2d2" port="7822" customName="tt" nameFormat="CUSTOM" username="calomnic">
+        <option name="customName" value="tt" />
+      </sshConfig>
+      <sshConfig authType="PASSWORD" host="199.195.117.153" id="f886db5b-41ac-473d-a395-d7da284ae4dc" port="7822" nameFormat="DESCRIPTIVE" username="root" />
+    </configs>
+  </component>
+</project>

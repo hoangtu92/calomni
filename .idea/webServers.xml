@@ -3,11 +3,10 @@
   <component name="WebServers">
     <option name="servers">
       <webServer id="24c62c47-2a42-4c24-96d4-e347f5eb663a" name="tt" url="http://calomnic.wwwaz1-ts1.a2hosted.com">
-        <fileTransfer host="az1-ts1.a2hosting.com" port="7822" rootFolder="/home/calomnic/calomni" accessType="SFTP">
+        <fileTransfer rootFolder="/home/calomnic/calomni" accessType="SFTP" host="199.195.117.153" port="7822" sshConfigId="f886db5b-41ac-473d-a395-d7da284ae4dc" sshConfig="root@199.195.117.153:7822 password">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
           </advancedOptions>
-          <option name="port" value="7822" />
         </fileTransfer>
       </webServer>
     </option>

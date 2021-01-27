@@ -47,6 +47,7 @@ class JobController extends Controller
             ->addSelect("host_software.price as price")
             ->addSelect(DB::raw("CONCAT('{$url}/', MD5(users.uid), '/', MD5(jobs.uid), '.zip') as file_url"))
             ->where("jobs.user_id", "=", $request->user()->id)
+            ->where("jobs.status", "!=", Job::WAITING)
             ->distinct("jobs.id")
             ->orderByDesc("jobs.id")
             ->take(20)
@@ -84,11 +85,11 @@ class JobController extends Controller
     public function create(Request $request)
     {
 
-        $request->validate([
-            "host_id" => "required",
-            "software_id" => "required",
-            "run_file" => "required"
-        ]);
+        if(!$request->filled("host_id") or !$request->filled("software_id") or !$request->filled("run_file")){
+            $response = new FailedResponse([]);
+            return $response->additional(["message" => "Error, missing data"]);
+        }
+
 
         $hostSoftware = HostSoftware::where("host_id", $request->host_id)->where("software_id", $request->software_id)->first();
 
@@ -97,34 +98,8 @@ class JobController extends Controller
             return $response->additional(["message" => "Host cannot run this software"])->response()->setStatusCode(400);
         }
 
-        $user_dir = "/" . md5($request->user()->uid);
-
-        if (!Storage::exists($user_dir)) {
-            Storage::makeDirectory($user_dir);
-        }
-
         $uid = Str::uuid();
 
-
-        if (!$request->file('run_file')->isValid()) {
-            $response = new FailedResponse($request);
-            return $response->additional(["message" => "Invalid File upload"])->response()->setStatusCode(400);
-        }
-
-        $zipFileName = md5($uid).'.zip';
-        $zip = new ZipArchive();
-
-        $zip->open( public_path()."/jobs/".$user_dir."/" .$zipFileName, ZipArchive::CREATE);
-
-        $zip->addFile($request->file("run_file")->path(), $request->file('run_file')->getClientOriginalName() ); //where the file needs to be add to archive
-        if ($request->hasfile('other_files')) {
-            foreach ($request->file('other_files') as $other_file) {
-                $zip->addFile($other_file->path(), $other_file->getClientOriginalName() );
-            }
-        }
-
-        # Log::info(json_encode($zip));
-        $zip->close();
 
         $job = new Job([
             "uid" => $uid,
@@ -132,8 +107,8 @@ class JobController extends Controller
             "host_id" => $request->host_id,
             "software_id" => $request->software_id,
             "host_software_id" => $hostSoftware->id,
-            "run_file" => $request->file('run_file')->getClientOriginalName(),
-            "status" => Job::PENDING
+            "run_file" => $request->run_file,
+            "status" => Job::WAITING
         ]);
 
         $job->save();
@@ -142,12 +117,52 @@ class JobController extends Controller
 
     }
 
+    /**
+     * @param $id
+     * @param Request $request
+     * @return FailedResponse|SuccessResponse|\Illuminate\Http\JsonResponse|object
+     */
+    public function upload_file($id, Request $request)
+    {
+
+        $job = Job::find($id);
+        if ($job) {
+            $user_dir = "/" . md5($job->user->uid);
+
+            if (!Storage::exists($user_dir)) {
+                Storage::makeDirectory($user_dir);
+            }
+
+            $putdata = fopen("php://input", "r");
+
+            /* Open a file for writing */
+            $fp = fopen(public_path() . "/jobs/" . $user_dir . "/" . md5($job->uid) . '.zip', "w");
+
+            /* Read the data 1 KB at a time
+               and write to the file */
+            while ($data = fread($putdata, 1024))
+                fwrite($fp, $data);
+
+            /* Close the streams */
+            fclose($fp);
+            fclose($putdata);
+
+            $job->status = Job::PENDING;
+            $job->save();
+
+            return new SuccessResponse($job);
+        }
+        return new FailedResponse($request->toArray());
+
+    }
+
     public function assign_host($id, Request $request)
     {
 
-        $request->validate([
-            "host_id" => "required"
-        ]);
+        if(!$request->filled("host_id")){
+            $response = new FailedResponse([]);
+            return $response->additional(["message" => "Error, missing data"]);
+        }
 
         $job = Job::find($id);
 
@@ -156,7 +171,7 @@ class JobController extends Controller
 
             $hostSoftware = HostSoftware::where("host_id", $request->host_id)->where("software_id", $job->software_id)->first();
 
-            if (!$hostSoftware){
+            if (!$hostSoftware) {
                 $response = new FailedResponse([]);
                 return $response->additional(["message" => "Host cannot run this software\""]);
             }
@@ -173,9 +188,11 @@ class JobController extends Controller
 
     public function host_assignments(Request $request)
     {
-        $request->validate([
-            "token" => "required"
-        ]);
+
+        if(!$request->filled("token")){
+            $response = new FailedResponse([]);
+            return $response->additional(["message" => "Error, missing data"]);
+        }
 
         $host = Host::where("token", "=", $request->token)->first();
         $host->last_active = now();
@@ -198,8 +215,9 @@ class JobController extends Controller
                 ->addSelect("run_file")
                 ->selectRaw("IF(software.run_command IS NULL, CONCAT(' ./', jobs.run_file), CONCAT(software.run_command, ' ./', jobs.run_file) ) as command")
                 ->addSelect(DB::raw("CONCAT('{$url}/', MD5(users.uid), '/', MD5(jobs.uid), '.zip') as file_url"))
+                ->addSelect(DB::raw("MD5(jobs.uid) as path"))
                 ->where("host_id", "=", $host->id)
-                ->where("status", "=", Job::PENDING)
+                ->where("jobs.status", "=", Job::PENDING)
                 ->get();
 
             return new SuccessResponse($resource);
@@ -207,10 +225,12 @@ class JobController extends Controller
         return new FailedResponse([]);
     }
 
-    public function download_report($id){
+    public function download_report($id)
+    {
         $url = url("jobs");
         $job = Job::join("users", "users.id", "=", "jobs.user_id")
-            ->addSelect(DB::raw("CONCAT('{$url}/', MD5(users.uid), '/', MD5(jobs.uid), '.zip') as file_url"))
+            ->join("hosts", "hosts.id", "=", "jobs.host_id")
+            ->addSelect(DB::raw("CONCAT('{$url}/', MD5(users.uid), '/reports/', MD5(CONCAT(jobs.uid, hosts.token)), '.zip') as file_url"))
             ->where("jobs.id", "=", $id)->first();
 
         return new SuccessResponse($job);
@@ -220,8 +240,9 @@ class JobController extends Controller
     {
         $job = Job::find($id);
 
-        if ($job)
+        if ($job){
             $job->delete();
+        }
 
         return new SuccessResponse($job);
     }
@@ -241,10 +262,10 @@ class JobController extends Controller
     {
         $job = Job::find($id);
 
-        if($job){
+        if ($job) {
             if ($job->status == Job::RUNNING) {
-                $response =  new FailedResponse([]);
-                return $response->additional(["message" => "Job is already running" ]);
+                $response = new FailedResponse([]);
+                return $response->additional(["message" => "Job is already running"]);
             }
 
             $job->status = Job::PENDING;
@@ -259,11 +280,11 @@ class JobController extends Controller
     {
         $job = Job::find($id);
 
-        if($job){
+        if ($job) {
             $job->status = Job::STOPPPED;
 
             $runningTasks = Task::where('job_id', $job->id)->where('status', "=", Task::RUNNING)->orderByDesc("created_at")->first();
-            if($runningTasks){
+            if ($runningTasks) {
                 $runningTasks->status = Task::STOPPED;
                 $runningTasks->save();
             }
@@ -280,17 +301,24 @@ class JobController extends Controller
      * @param Request $request
      * @return FailedResponse|SuccessResponse
      */
-    public function update_task($id, Request $request){
+    public function update_task($id, Request $request)
+    {
 
-        $request->validate([
-            "status" => "required"
-        ]);
+        if(!$request->filled("status")){
+            $response = new FailedResponse([]);
+            return $response->additional(["message" => "Error, missing data"]);
+        }
 
         $job = Job::find($id);
 
-        if(!$job){
+        if (!$job) {
             $response = new FailedResponse([]);
             return $response->additional(["message" => "Job is removed or not exists"]);
+        }
+
+        if(in_array($job->status, [Job::STOPPPED, Job::PENDING]) && in_array($request->status, [Job::COMPLETED, Job::FAILED])){
+            $response = new FailedResponse([]);
+            return $response->additional(["message" => "Job has finished"]);
         }
 
         $job->status = $request->status;
@@ -300,7 +328,7 @@ class JobController extends Controller
             ->where("status", "=", Task::RUNNING)
             ->first();
 
-        if(!$task){
+        if (!$task) {
             //Todo with payment/price of task
             $task = new Task([
                 "job_id" => $id,
@@ -309,13 +337,20 @@ class JobController extends Controller
                 "status" => Task::RUNNING,
                 'start' => now()
             ]);
-        }
-        else{
+        } else {
+
             $task->status = $request->status;
 
-            if($request->hasFile("data")){
-                $job_dir = "/" . md5($job->user->uid)."/";
-                $request->file("data")->storeAs($job_dir, $request->file('data')->getClientOriginalName());
+            if ($request->hasFile("data")) {
+
+
+                $job_result_dir = "/" . md5($job->user->uid) . "/reports/";
+
+                if (!Storage::exists($job_result_dir)) {
+                    Storage::makeDirectory($job_result_dir);
+                }
+
+                $request->file("data")->storeAs($job_result_dir, md5($job->uid.$job->host->token).".zip");
                 $task->finish = now();
             }
         }

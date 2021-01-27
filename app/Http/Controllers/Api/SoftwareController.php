@@ -62,9 +62,10 @@ class SoftwareController extends Controller
 
     public function request_for_testing ($id, Request $request) {
 
-        $request->validate([
-            "token" => "required"
-        ]);
+        if($request->isNotFilled(['token'])){
+            $response = new FailedResponse([]);
+            return $response->additional(["message" => "Error, missing data"]);
+        }
 
         $software = Software::find($id);
         $host = Host::where("token", "=", $request->token)->first();
@@ -90,10 +91,10 @@ class SoftwareController extends Controller
 
     public function submit_test_result ($id, Request $request){
 
-        $request->validate([
-            "token" => "required",
-            "result" => "required"
-        ]);
+        if($request->isNotFilled(['token', 'result'])){
+            $response = new FailedResponse([]);
+            return $response->additional(["message" => "Error, missing data"]);
+        }
 
         $software = Software::find($id);
         $host = Host::where("token", "=", $request->token)->first();
@@ -150,10 +151,10 @@ class SoftwareController extends Controller
      */
     public function update_price ($id, Request $request) {
 
-        $request->validate([
-            "token" => "required",
-            "price" => "required"
-        ]);
+        if($request->isNotFilled(['token', 'price'])){
+            $response = new FailedResponse($request->toArray());
+            return $response->additional(["message" => "Error, missing data"]);
+        }
 
         $software = Software::find($id);
         $host = Host::where("token", "=", $request->token)->first();
@@ -173,7 +174,8 @@ class SoftwareController extends Controller
 
             $hostSoftware->save();
 
-            return new SuccessResponse($hostSoftware);
+            $response = new SuccessResponse($hostSoftware);
+            return $response->additional(["message" => "Successfully saved"]);
         }
 
         return new FailedResponse($request);

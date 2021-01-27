@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\FailedResponse;
 use App\Http\Resources\SuccessResponse;
 use App\Models\Host;
 use App\Models\Job;
@@ -13,20 +14,25 @@ use Illuminate\Support\Facades\DB;
 class HostController extends Controller
 {
     public function create (Request $request) {
-        $request->validate([
-            'name' => "required",
-            'os' => 'required',
-            'cpu_name' => 'required',
-            'cpu_freq' => "required",
-            'cpu_cores' => "required",
-            'mem_total' => "required",
-            'mem_free' => "required",
-            'storage_total' => "required",
-            'storage_free' => "required",
-            'info' => 'required',
-            'mac' => 'required',
-            "token" => "required"
-        ]);
+        $validate = [
+            'name',
+            'os',
+            'cpu_name',
+            'cpu_freq',
+            'cpu_cores',
+            'mem_total',
+            'mem_free',
+            'storage_total',
+            'storage_free',
+            'info',
+            'mac',
+            "token",
+        ];
+
+        if($request->isNotFilled($validate)){
+            $response = new FailedResponse([]);
+            return $response->additional(["message" => "Error, missing data"]);
+        }
 
         $exists = Host::where("token", $request->token)->first();
 
@@ -96,9 +102,11 @@ class HostController extends Controller
     public function tasks(Request $request)
     {
 
-        $request->validate([
-            "token" => "required"
-        ]);
+
+        if($request->isNotFilled(["token"])){
+            $response = new FailedResponse([]);
+            return $response->additional(["message" => "Error, missing data"]);
+        }
 
         $resource = DB::table("tasks")
             ->join("jobs", "jobs.id", "=", "tasks.job_id")
